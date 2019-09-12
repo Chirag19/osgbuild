@@ -1,0 +1,78 @@
+#---------------------------------#
+#      general configuration      #
+#---------------------------------#
+
+# Avoid cloning the entire repo, only get last commit
+clone_depth: 1
+
+# version format
+version: 3.6.4.{build}
+
+# branches to build
+branches:
+  # whitelist
+  only:
+    - master
+
+
+#----------------------------------#
+#  cache third party dependencies  #
+#----------------------------------#
+cache:
+- c:\osg -> appveyor.yml, downloadsrc.bat
+
+#---------------------------------#
+#           build matrix          #
+#---------------------------------#
+environment:
+  matrix:
+    # Visual Studio 2015 - 32 bit
+    # - Name: v140-x86
+    #   APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+    #   Generator: Visual Studio 14 2015
+    # Visual Studio 2015 - 64 bit
+    #- Name: v140-x64
+    #  APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015 
+    #  Generator: Visual Studio 14 2015 Win64
+    # Visual Studio 2017 - 32 bit
+    # - Name: v141-x86
+    #   APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    #   Generator: Visual Studio 15 2017
+    # Visual Studio 2017 - 64 bit
+     - Name: v141-x64
+       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+       Generator: Visual Studio 15 2017 Win64
+
+clone_folder: c:\projects\osgbuild
+
+#----------------------------------#
+# install third party dependencies #
+#----------------------------------#
+install:
+- cmd: IF NOT EXIST "c:\osg" downloadsrc.bat
+
+
+#---------------------------------#
+#       build configuration       #
+#---------------------------------#
+
+
+build_script:
+- cmd: >-
+    mkdir build
+    
+    cd build
+    
+    cmake c:\osg\osg -G "%Generator%" -DCMAKE_INSTALL_PREFIX="C:/projects/osgbuild/build/install/%Name%"
+    
+    cmake --build . --config "Debug" --target install 
+    
+    cmake --build . --config "Release" --target install 
+    
+    cd install\%Name%
+    
+    7z a c:\projects\osgbuild\%Name%.zip . 
+
+artifacts:
+- path: '%Name%.zip'
+  name: '%Name%'
